@@ -1,0 +1,56 @@
+#!/bin/bash
+/usr/local/lstc/lstc_qrun 2> /dev/null | grep 'No programs queued' | wc -c > /tmp/tmp/tmp_test
+v1=`cat /tmp/tmp/tmp_test`
+if [ $v1 -eq "19" ]; then
+        /usr/local/lstc/lstc_qrun 2> /dev/null | sed -e '1,6d' > /tmp/tmp/tmp_output
+        grep -n 'No programs queued' /tmp/tmp/tmp_output | cut -f1 -d: > /tmp/tmp/tmp_test1
+        v3=`cat /tmp/tmp/tmp_test1`
+        v4=`expr $v3 - 1`
+        head -$v4 /tmp/tmp/tmp_output > /tmp/userlist
+else
+        /usr/local/lstc/lstc_qrun | sed -e '1,7d' > /tmp/tmp_output
+        grep -n 'Queued Programs' /tmp/tmp_output | cut -f1 -d: > /tmp/tmp_line
+        tmp_mline=`cat /tmp/tmp_line`
+        tmp_nline=`expr $tmp_mline - 3`
+        head -$tmp_nline /tmp/tmp_output > /tmp/userlist
+fi
+cat /tmp/userlist | sort -k1 > /tmp/sorteduserlist
+cat /tmp/sorteduserlist | sort  -k1,1 -r -u | awk '{print $1}' > /tmp/singleuserlist
+rm /tmp/corewiseusage1
+total_core=0
+tot_coreusage=0
+echo "<html><head><meta http-equiv='refresh' content='4'>  <title>" >> /tmp/corewiseusage1
+echo "DYNA LICENSE" >> /tmp/corewiseusage1
+echo "</title></head>" >> /tmp/corewiseusage1
+echo "<body bgcolor=#D8BFD8>" >> /tmp/corewiseusage1
+echo "<img src="locuz.jpg" width="200" height="100" align="right">" >> /tmp/corewiseusage1
+echo "<h1>" >> /tmp/corewiseusage1
+echo "<center> LS DYNA LICENSE USAGE DETAILS </center>" >> /tmp/corewiseusage1
+echo "</h1>" >> /tmp/corewiseusage1
+echo "Last refresh at `date`" >> /tmp/corewiseusage1
+while read line
+do
+        # use $line variable to process line
+        cat /tmp/sorteduserlist| grep  $line > /tmp/filteruserlist
+        cat /tmp/filteruserlist  |  awk '{print $8}' > /tmp/usercorevalue
+        tot_core=0
+        while read value
+        do
+        let "tot_core +=value"
+        tot_coreusage=$tot_core
+        done < /tmp/usercorevalue
+echo "<h1>" >> /tmp/corewiseusage1
+        echo $line"="$tot_core  >> /tmp/corewiseusage1
+let "total_core +=tot_coreusage"
+done < /tmp/singleuserlist
+printf "</h1>\n" >> /tmp/corewiseusage1
+printf "<h1>" >> /tmp/corewiseusage1
+echo "Total LS-DYNA Usage=$total_core" >> /tmp/corewiseusage1
+ let "usage=212 - total_core" >> /tmp/corewiseusage1
+printf "</h1>\n" >> /tmp/corewiseusage1
+printf "<h1>" >> /tmp/corewiseusage1
+echo "Free LS-DYNA License=$usage" >> /tmp/corewiseusage1
+echo "</h1>" >> /tmp/corewiseusage1
+echo "</body>" >> /tmp/corewiseusage1
+echo "</html>" >> /tmp/corewiseusage1?
+
